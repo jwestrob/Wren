@@ -1,0 +1,48 @@
+# Tiny test config for smoke testing
+model:
+  hidden_dim: 128
+  num_layers: 2
+  num_heads: 4
+  head_dim: 32
+  ffn_dim: 341
+  vocab_size: 25
+  max_seq_len: 512
+  mrl_dims: [32, 64, 128]
+  embedding_dim: 128
+  dropout: 0.0
+  use_bitlinear: true
+  gradient_checkpointing: false
+
+training:
+  learning_rate: 1.0e-3
+  weight_decay: 0.01
+  beta1: 0.9
+  beta2: 0.95
+  eps: 1.0e-8
+  max_grad_norm: 1.0
+  warmup_steps: 10
+  total_steps: 50
+  lr_schedule: cosine
+  batch_size: 2
+  gradient_accumulation_steps: 1
+  save_every_steps: 25
+  eval_every_steps: 25
+  checkpoint_dir: checkpoints/test
+  log_every_steps: 10
+  wandb_project: null
+  device: mps
+  mixed_precision: false
+  seed: 42
+
+data:
+  dataset_path: data/test
+  max_length: 512
+  min_length: 50
+  mask_prob: 0.15
+  mask_token_prob: 0.8
+  random_token_prob: 0.1
+  crop_min_ratio: 0.7
+  crop_max_ratio: 0.9
+  extra_mask_prob: 0.2
+  num_workers: 0
+  prefetch_factor: 2

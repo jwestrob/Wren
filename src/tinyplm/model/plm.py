@@ -56,6 +56,8 @@ class TinyPLM(nn.Module):
                 dropout=config.dropout,
                 max_seq_len=config.max_seq_len,
                 gradient_checkpointing=config.gradient_checkpointing,
+                use_yarn=config.use_yarn,
+                rope_scale=config.rope_scale,
             )
             for _ in range(config.num_layers)
         ])

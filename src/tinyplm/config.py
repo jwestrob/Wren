@@ -30,6 +30,10 @@ class ModelConfig:
     # Quantization
     use_bitlinear: bool = True  # False for FP16 baseline
 
+    # Position encoding
+    use_yarn: bool = True  # Use YaRN (True) or standard RoPE (False)
+    rope_scale: float = 1.0  # Context extension scale (1.0 = no scaling)
+
     # Memory optimization
     gradient_checkpointing: bool = True
 

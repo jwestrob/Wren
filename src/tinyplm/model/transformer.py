@@ -1,20 +1,29 @@
 """Transformer Block for TinyPLM.
 
 Pre-norm architecture combining:
-- Multi-head attention (or Differential attention)
+- Multi-head attention (or Differential attention) with YaRN
 - SwiGLU feed-forward network
 - Residual connections
 """
 
+from dataclasses import dataclass
 from typing import Optional
 
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
-from tinyplm.model.attention import DifferentialAttention, MultiHeadAttention
+from tinyplm.model.attention import AttentionOutput, DifferentialAttention, MultiHeadAttention
 from tinyplm.model.ffn import SwiGLUFFN
 from tinyplm.model.norm import RMSNorm
+
+
+@dataclass
+class TransformerBlockOutput:
+    """Output from transformer block with optional attention maps."""
+
+    hidden_states: torch.Tensor
+    attention_weights: Optional[torch.Tensor] = None
 
 
 class TransformerBlock(nn.Module):
@@ -36,6 +45,8 @@ class TransformerBlock(nn.Module):
         dropout: float = 0.0,
         max_seq_len: int = 2048,
         gradient_checkpointing: bool = False,
+        use_yarn: bool = True,
+        rope_scale: float = 1.0,
     ):
         """Initialize Transformer Block.
 
@@ -49,6 +60,8 @@ class TransformerBlock(nn.Module):
             dropout: Dropout probability.
             max_seq_len: Maximum sequence length.
             gradient_checkpointing: Whether to use gradient checkpointing.
+            use_yarn: Whether to use YaRN position encoding.
+            rope_scale: Context extension scale factor.
         """
         super().__init__()
 
@@ -75,6 +88,8 @@ class TransformerBlock(nn.Module):
                 use_bitlinear=use_bitlinear,
                 dropout=dropout,
                 max_seq_len=max_seq_len,
+                use_yarn=use_yarn,
+                rope_scale=rope_scale,
             )
 
         # Pre-norm for FFN

@@ -480,11 +480,27 @@ total_loss = (
 3. Should we use MSA information during training, or stick to single-sequence?
 4. How does embedding pooling strategy (mean vs CLS) interact with MRL?
 
+### Important: Custom Kernels Required for Real Efficiency
+
+**Current implementation uses "fake quantization"** — weights are quantized to ternary values but stored as float tensors, and standard PyTorch matmul is used. This is mathematically correct for training and benchmarking, but does NOT provide the 10x memory reduction or inference speedup.
+
+**For real efficiency gains, we need:**
+1. **Weight packing**: Store ternary weights as 2 bits (4 weights per byte)
+2. **Custom Triton/CUDA kernels**: int2 × int8 matmul that unpacks on-the-fly
+3. **Optimized memory layout**: For efficient GPU memory access
+
+**Pragmatic path:**
+- Phases 1-4: Train with fake quantization (validates the science)
+- Phase 5+: Write Triton kernels for inference benchmarking
+- Production: Optimize kernels or use existing runtimes (llama.cpp, Microsoft BitNet)
+
+The ternary case is actually simpler than int4/int8 since multiply by {-1, 0, +1} is just add/subtract/skip.
+
 ### Ideas for Future Work
 - BitNet + MRL + Layer Sharing (after validating base approach)
 - Multi-task training with auxiliary structure prediction heads
 - Extending to nucleotide sequences (DNA/RNA language models)
-- Hardware-specific optimizations for ternary inference
+- Custom Triton kernels for real ternary inference efficiency
 
 ---
 
@@ -493,6 +509,7 @@ total_loss = (
 | Date | Changes |
 |------|---------|
 | 2024-12-28 | Initial plan created |
+| 2025-12-28 | Added note: custom Triton kernels needed for real efficiency (fake quant OK for training) |
 
 ---
 

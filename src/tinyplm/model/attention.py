@@ -2,13 +2,15 @@
 
 Implements standard multi-head attention with:
 - BitLinear for Q, K, V, O projections
-- Rotary Position Embeddings (RoPE)
+- YaRN/RoPE Position Embeddings
+- Optional attention map extraction for contact prediction
 - Optional Flash Attention for efficiency
 
 Phase 1b will add Differential Attention.
 """
 
 import math
+from dataclasses import dataclass
 from typing import Optional
 
 import torch
@@ -16,13 +18,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from tinyplm.model.bitlinear import get_linear_layer
-from tinyplm.model.rope import RotaryEmbedding, apply_rope
+from tinyplm.model.rope import (
+    RotaryEmbedding,
+    YaRNRotaryEmbedding,
+    apply_rope,
+    apply_rope_with_scale,
+)
+
+
+@dataclass
+class AttentionOutput:
+    """Output from attention layer with optional attention maps."""
+
+    hidden_states: torch.Tensor
+    attention_weights: Optional[torch.Tensor] = None  # [batch, heads, seq, seq]
 
 
 class MultiHeadAttention(nn.Module):
-    """Multi-Head Self-Attention with RoPE.
+    """Multi-Head Self-Attention with YaRN/RoPE.
 
     Uses BitLinear for all projections when quantization is enabled.
+    Supports attention map extraction for contact prediction.
     """
 
     def __init__(
@@ -33,6 +49,8 @@ class MultiHeadAttention(nn.Module):
         use_bitlinear: bool = True,
         dropout: float = 0.0,
         max_seq_len: int = 2048,
+        use_yarn: bool = True,
+        rope_scale: float = 1.0,
     ):
         """Initialize Multi-Head Attention.
 
@@ -42,7 +60,9 @@ class MultiHeadAttention(nn.Module):
             head_dim: Dimension per head (default: hidden_dim // num_heads).
             use_bitlinear: Whether to use BitLinear.
             dropout: Attention dropout probability.
-            max_seq_len: Maximum sequence length for RoPE.
+            max_seq_len: Maximum sequence length for position encoding.
+            use_yarn: Whether to use YaRN (True) or standard RoPE (False).
+            rope_scale: Scale factor for context extension (1.0 = no scaling).
         """
         super().__init__()
 
@@ -50,6 +70,7 @@ class MultiHeadAttention(nn.Module):
         self.num_heads = num_heads
         self.head_dim = head_dim or (hidden_dim // num_heads)
         self.scale = self.head_dim**-0.5
+        self.use_yarn = use_yarn
 
         # Total dimension for all heads
         self.total_head_dim = self.num_heads * self.head_dim
@@ -70,8 +91,19 @@ class MultiHeadAttention(nn.Module):
             self.total_head_dim, hidden_dim, bias=False, use_bitlinear=use_bitlinear
         )
 
-        # RoPE for position encoding
-        self.rotary_emb = RotaryEmbedding(self.head_dim, max_seq_len=max_seq_len)
+        # Position encoding: YaRN or standard RoPE
+        if use_yarn:
+            self.rotary_emb = YaRNRotaryEmbedding(
+                dim=self.head_dim,
+                max_seq_len=max_seq_len,
+                original_max_seq_len=max_seq_len,
+                scale=rope_scale,
+            )
+        else:
+            self.rotary_emb = RotaryEmbedding(
+                dim=self.head_dim,
+                max_seq_len=max_seq_len,
+            )
 
         self.dropout = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
 
@@ -80,7 +112,8 @@ class MultiHeadAttention(nn.Module):
         x: torch.Tensor,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
+        output_attentions: bool = False,
+    ) -> torch.Tensor | AttentionOutput:
         """Forward pass through attention.
 
         Args:
@@ -88,9 +121,11 @@ class MultiHeadAttention(nn.Module):
             attention_mask: Optional mask of shape [batch, seq_len] or
                 [batch, 1, seq_len, seq_len]. 1 = attend, 0 = mask.
             position_ids: Optional position indices for RoPE.
+            output_attentions: Whether to return attention weights (for contact maps).
 
         Returns:
-            Output tensor of shape [batch, seq_len, hidden_dim].
+            If output_attentions=False: Output tensor [batch, seq_len, hidden_dim].
+            If output_attentions=True: AttentionOutput with hidden_states and attention_weights.
         """
         batch_size, seq_len, _ = x.shape
 
@@ -104,11 +139,17 @@ class MultiHeadAttention(nn.Module):
         k = k.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
 
-        # Apply RoPE
-        cos, sin = self.rotary_emb(seq_len)
-        cos = cos.to(x.dtype)
-        sin = sin.to(x.dtype)
-        q, k = apply_rope(q, k, cos, sin, position_ids)
+        # Apply position encoding
+        if self.use_yarn:
+            cos, sin, attn_scale = self.rotary_emb(seq_len)
+            cos = cos.to(x.dtype)
+            sin = sin.to(x.dtype)
+            q, k = apply_rope_with_scale(q, k, cos, sin, attn_scale, position_ids)
+        else:
+            cos, sin = self.rotary_emb(seq_len)
+            cos = cos.to(x.dtype)
+            sin = sin.to(x.dtype)
+            q, k = apply_rope(q, k, cos, sin, position_ids)
 
         # Compute attention scores
         attn_weights = torch.matmul(q, k.transpose(-2, -1)) * self.scale
@@ -127,6 +168,10 @@ class MultiHeadAttention(nn.Module):
 
         # Softmax and dropout
         attn_weights = F.softmax(attn_weights, dim=-1)
+
+        # Save attention weights before dropout for contact prediction
+        attn_weights_for_output = attn_weights if output_attentions else None
+
         attn_weights = self.dropout(attn_weights)
 
         # Apply attention to values
@@ -139,6 +184,11 @@ class MultiHeadAttention(nn.Module):
         # Output projection
         output = self.o_proj(attn_output)
 
+        if output_attentions:
+            return AttentionOutput(
+                hidden_states=output,
+                attention_weights=attn_weights_for_output,
+            )
         return output
 
 

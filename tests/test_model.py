@@ -5,7 +5,7 @@ import torch
 
 from tinyplm.config import ModelConfig
 from tinyplm.model.bitlinear import BitLinear
-from tinyplm.model.rope import RotaryEmbedding, apply_rope
+from tinyplm.model.rope import RotaryEmbedding, YaRNRotaryEmbedding, apply_rope, apply_rope_with_scale
 from tinyplm.model.norm import RMSNorm
 from tinyplm.model.ffn import SwiGLUFFN
 from tinyplm.model.attention import MultiHeadAttention
@@ -77,6 +77,54 @@ class TestRoPE:
         assert cos.shape == (128, 64)
 
 
+class TestYaRN:
+    """Tests for YaRN Rotary Position Embeddings."""
+
+    def test_yarn_forward_shape(self):
+        """Test that YaRN returns correct shapes."""
+        yarn = YaRNRotaryEmbedding(dim=64, max_seq_len=128, scale=1.0)
+        cos, sin, attn_scale = yarn(64)
+
+        assert cos.shape == (64, 64)
+        assert sin.shape == (64, 64)
+        assert isinstance(attn_scale, float)
+
+    def test_yarn_scaling(self):
+        """Test that YaRN with scale > 1 produces attention scaling."""
+        yarn_scaled = YaRNRotaryEmbedding(dim=64, max_seq_len=256, scale=2.0)
+        _, _, attn_scale = yarn_scaled(64)
+
+        # Scale > 1 should produce attn_scale > 1
+        assert attn_scale > 1.0
+
+    def test_yarn_no_scaling(self):
+        """Test that YaRN with scale=1 has attn_scale=1."""
+        yarn = YaRNRotaryEmbedding(dim=64, max_seq_len=128, scale=1.0)
+        _, _, attn_scale = yarn(64)
+
+        assert attn_scale == 1.0
+
+    def test_apply_rope_with_scale(self):
+        """Test apply_rope_with_scale preserves shapes."""
+        yarn = YaRNRotaryEmbedding(dim=64, max_seq_len=128, scale=1.0)
+        cos, sin, attn_scale = yarn(32)
+
+        q = torch.randn(2, 8, 32, 64)
+        k = torch.randn(2, 8, 32, 64)
+
+        q_rot, k_rot = apply_rope_with_scale(q, k, cos, sin, attn_scale)
+
+        assert q_rot.shape == q.shape
+        assert k_rot.shape == k.shape
+
+    def test_yarn_cache_extension(self):
+        """Test that YaRN cache extends for longer sequences."""
+        yarn = YaRNRotaryEmbedding(dim=64, max_seq_len=64, scale=1.0)
+        cos, sin, _ = yarn(128)  # Longer than initial max
+
+        assert cos.shape == (128, 64)
+
+
 class TestRMSNorm:
     """Tests for RMSNorm."""
 
@@ -136,6 +184,37 @@ class TestMultiHeadAttention:
         mask[:, 16:] = 0  # Mask second half
 
         out = attn(x, attention_mask=mask)
+        assert out.shape == x.shape
+
+    def test_output_attentions(self):
+        """Test that attention weights can be extracted."""
+        attn = MultiHeadAttention(hidden_dim=256, num_heads=8)
+        x = torch.randn(2, 32, 256)
+
+        out = attn(x, output_attentions=True)
+
+        # Should return AttentionOutput dataclass
+        assert hasattr(out, 'hidden_states')
+        assert hasattr(out, 'attention_weights')
+        assert out.hidden_states.shape == x.shape
+        assert out.attention_weights.shape == (2, 8, 32, 32)  # [batch, heads, seq, seq]
+
+    def test_yarn_mode(self):
+        """Test attention with YaRN position encoding."""
+        attn = MultiHeadAttention(
+            hidden_dim=256, num_heads=8, use_yarn=True, rope_scale=1.0
+        )
+        x = torch.randn(2, 32, 256)
+        out = attn(x)
+        assert out.shape == x.shape
+
+    def test_rope_mode(self):
+        """Test attention with standard RoPE (no YaRN)."""
+        attn = MultiHeadAttention(
+            hidden_dim=256, num_heads=8, use_yarn=False
+        )
+        x = torch.randn(2, 32, 256)
+        out = attn(x)
         assert out.shape == x.shape
 
 
