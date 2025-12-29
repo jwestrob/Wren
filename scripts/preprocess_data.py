@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Data preprocessing script for TinyPLM.
+"""Data preprocessing script for Wren.
 
 Downloads UniRef50 and dereplicates at 99.5% identity using MMSeqs2
 to prevent near-identical sequences from appearing as negatives in MRL training.
@@ -280,7 +280,7 @@ def create_train_val_split(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Preprocess protein sequences for TinyPLM training"
+        description="Preprocess protein sequences for Wren training"
     )
     parser.add_argument(
         "--input",

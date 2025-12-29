@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Training script for TinyPLM.
+"""Training script for Wren.
 
 Usage:
     python scripts/train.py --config configs/tiny_50m.yaml
@@ -13,16 +13,16 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from tinyplm.config import Config
-from tinyplm.data import (
+from wren.config import Config
+from wren.data import (
     ProteinTokenizer,
     ProteinDataset,
     MLMDataset,
     ContrastiveMLMDataset,
     create_dataloader,
 )
-from tinyplm.model import TinyPLM
-from tinyplm.training.trainer import Trainer
+from wren.model import Wren
+from wren.training.trainer import Trainer
 
 
 def set_seed(seed: int) -> None:
@@ -35,7 +35,7 @@ def set_seed(seed: int) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train TinyPLM")
+    parser = argparse.ArgumentParser(description="Train Wren")
     parser.add_argument(
         "--config",
         type=Path,
@@ -85,7 +85,7 @@ def main():
 
     # Print config
     print("=" * 60)
-    print("TinyPLM Training")
+    print("Wren Training")
     print("=" * 60)
     print(f"Config: {args.config}")
     print(f"Model: {config.model.hidden_dim}d, {config.model.num_layers}L, {config.model.num_heads}H")
@@ -174,7 +174,7 @@ def main():
 
     # Create model
     print("Creating model...", flush=True)
-    model = TinyPLM(config.model)
+    model = Wren(config.model)
     print(f"Parameters: {model.num_parameters:,}", flush=True)
     print(f"Trainable: {model.num_trainable_parameters:,}", flush=True)
 

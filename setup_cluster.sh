@@ -2,7 +2,7 @@
 # One-command setup for Lambda Labs / cloud training
 #
 # Usage:
-#   git clone <repo> tinyplm && cd tinyplm && ./setup_cluster.sh
+#   git clone <repo> wren && cd wren && ./setup_cluster.sh
 #
 # This will:
 #   1. Install Python dependencies
@@ -13,7 +13,7 @@
 set -e
 
 echo "=============================================="
-echo "TinyPLM Cluster Setup"
+echo "Wren Cluster Setup"
 echo "=============================================="
 
 # Check for CUDA

@@ -31,7 +31,7 @@ training:
   eval_every_steps: 1000
   checkpoint_dir: checkpoints/swissprot_50m
   log_every_steps: 10
-  wandb_project: tinyplm
+  wandb_project: wren
   device: mps
   mixed_precision: false  # MPS doesn't support AMP well
   seed: 42

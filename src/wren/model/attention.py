@@ -1,4 +1,4 @@
-"""Multi-Head Attention for TinyPLM.
+"""Multi-Head Attention for Wren.
 
 Implements standard multi-head attention with:
 - BitLinear for Q, K, V, O projections
@@ -17,8 +17,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from tinyplm.model.bitlinear import get_linear_layer
-from tinyplm.model.rope import (
+from wren.model.bitlinear import get_linear_layer
+from wren.model.rope import (
     RotaryEmbedding,
     YaRNRotaryEmbedding,
     apply_rope,

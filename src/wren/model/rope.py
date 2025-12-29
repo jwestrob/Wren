@@ -1,4 +1,4 @@
-"""Rotary Position Embeddings (RoPE) for TinyPLM.
+"""Rotary Position Embeddings (RoPE) for Wren.
 
 Implements position encoding via rotation of query/key vectors.
 Enables relative position awareness and extrapolation to longer sequences.

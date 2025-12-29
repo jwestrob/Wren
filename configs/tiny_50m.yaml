@@ -1,4 +1,4 @@
-# TinyPLM 50M parameter configuration
+# Wren 50M parameter configuration
 # BitNet-MRL Protein Language Model
 
 model:
@@ -31,7 +31,7 @@ training:
   eval_every_steps: 500
   checkpoint_dir: checkpoints
   log_every_steps: 100
-  wandb_project: tinyplm
+  wandb_project: wren
   device: cuda
   mixed_precision: true
   seed: 42

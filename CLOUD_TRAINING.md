@@ -11,8 +11,8 @@
 
 ```bash
 # Clone repo
-git clone <your-repo-url> tinyplm
-cd tinyplm
+git clone <your-repo-url> wren
+cd wren
 
 # Install dependencies
 pip install -e .
@@ -81,7 +81,7 @@ python scripts/train.py \
 Download checkpoints:
 ```bash
 # From your local machine
-scp -r user@instance:/path/to/tinyplm/checkpoints ./
+scp -r user@instance:/path/to/wren/checkpoints ./
 ```
 
 Or sync to cloud storage during training (edit train.py to add S3/GCS sync).

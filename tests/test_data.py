@@ -1,4 +1,4 @@
-"""Tests for TinyPLM data pipeline."""
+"""Tests for Wren data pipeline."""
 
 import tempfile
 from pathlib import Path
@@ -6,15 +6,15 @@ from pathlib import Path
 import pytest
 import torch
 
-from tinyplm.data.tokenizer import ProteinTokenizer
-from tinyplm.data.dataset import (
+from wren.data.tokenizer import ProteinTokenizer
+from wren.data.dataset import (
     ProteinDataset,
     MLMDataset,
     ContrastiveMLMDataset,
     MLMMasker,
     ContrastiveAugmenter,
 )
-from tinyplm.data.dataloader import (
+from wren.data.dataloader import (
     LengthBucketSampler,
     collate_fn,
     collate_contrastive_fn,

@@ -1,4 +1,4 @@
-"""Learning rate schedulers for TinyPLM.
+"""Learning rate schedulers for Wren.
 
 Implements:
 - Cosine decay with warmup (Phase 1a)

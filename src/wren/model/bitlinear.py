@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from tinyplm.model.norm import RMSNorm
+from wren.model.norm import RMSNorm
 
 
 class BitLinear(nn.Module):

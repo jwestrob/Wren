@@ -45,7 +45,7 @@ training:
   eval_every_steps: 1000
   checkpoint_dir: checkpoints/swissprot_50m_fp16  # <-- Different checkpoint dir
   log_every_steps: 10
-  wandb_project: tinyplm
+  wandb_project: wren
   device: mps
   mixed_precision: false
   seed: 42

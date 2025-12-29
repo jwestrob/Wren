@@ -1,1 +1,1 @@
-"""Tests for TinyPLM."""
+"""Tests for Wren."""

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Benchmark TinyPLM vs FP16 baseline vs ESM-2.
+"""Benchmark Wren vs FP16 baseline vs ESM-2.
 
 Compares:
 - Memory usage (model size, peak memory)
@@ -8,7 +8,7 @@ Compares:
 - Embedding quality (if pretrained weights available)
 
 Usage:
-    python scripts/benchmark.py --model tinyplm --checkpoint checkpoints/swissprot_50m/best.pt
+    python scripts/benchmark.py --model wren --checkpoint checkpoints/swissprot_50m/best.pt
     python scripts/benchmark.py --model fp16-baseline --config configs/swissprot_50m.yaml
     python scripts/benchmark.py --model esm2 --esm-model esm2_t6_8M_UR50D
 """
@@ -21,9 +21,9 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from tinyplm.config import Config, ModelConfig
-from tinyplm.model import TinyPLM
-from tinyplm.data import ProteinTokenizer
+from wren.config import Config, ModelConfig
+from wren.model import Wren
+from wren.data import ProteinTokenizer
 
 
 def get_model_size_mb(model: nn.Module) -> float:
@@ -158,9 +158,9 @@ def get_peak_memory_mb(device: torch.device) -> float:
     return -1
 
 
-def load_tinyplm(checkpoint_path: Path = None, config_path: Path = None,
-                 use_bitlinear: bool = True, device: str = "mps") -> TinyPLM:
-    """Load TinyPLM model."""
+def load_wren(checkpoint_path: Path = None, config_path: Path = None,
+                 use_bitlinear: bool = True, device: str = "mps") -> Wren:
+    """Load Wren model."""
     if config_path:
         config = Config.from_yaml(config_path)
         config.model.use_bitlinear = use_bitlinear
@@ -178,7 +178,7 @@ def load_tinyplm(checkpoint_path: Path = None, config_path: Path = None,
             use_bitlinear=use_bitlinear,
         )
 
-    model = TinyPLM(config.model)
+    model = Wren(config.model)
 
     if checkpoint_path and checkpoint_path.exists():
         checkpoint = torch.load(checkpoint_path, map_location=device)
@@ -241,12 +241,12 @@ def run_benchmark(model_type: str, checkpoint: Path = None, config: Path = None,
     tokenizer = ProteinTokenizer()
 
     # Load model
-    if model_type == "tinyplm":
-        model = load_tinyplm(checkpoint, config, use_bitlinear=True, device=device)
-        model_name = "TinyPLM (BitNet)"
+    if model_type == "wren":
+        model = load_wren(checkpoint, config, use_bitlinear=True, device=device)
+        model_name = "Wren (BitNet)"
     elif model_type == "fp16-baseline":
-        model = load_tinyplm(checkpoint, config, use_bitlinear=False, device=device)
-        model_name = "TinyPLM (FP16)"
+        model = load_wren(checkpoint, config, use_bitlinear=False, device=device)
+        model_name = "Wren (FP16)"
     elif model_type == "esm2":
         model, alphabet = load_esm2(esm_model, device)
         if model is None:
@@ -313,7 +313,7 @@ def run_benchmark(model_type: str, checkpoint: Path = None, config: Path = None,
 
 def compare_all(config: Path, checkpoint: Path = None, device: str = "mps",
                 batch_size: int = 8, seq_len: int = 512):
-    """Compare TinyPLM (BitNet) vs FP16 baseline."""
+    """Compare Wren (BitNet) vs FP16 baseline."""
 
     print("\n" + "="*60)
     print("COMPARISON: BitNet vs FP16 Baseline")
@@ -323,7 +323,7 @@ def compare_all(config: Path, checkpoint: Path = None, device: str = "mps",
 
     # BitNet
     results["bitnet"] = run_benchmark(
-        "tinyplm", checkpoint=checkpoint, config=config,
+        "wren", checkpoint=checkpoint, config=config,
         device=device, batch_size=batch_size, seq_len=seq_len
     )
 
@@ -360,9 +360,9 @@ def compare_all(config: Path, checkpoint: Path = None, device: str = "mps",
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Benchmark TinyPLM models")
-    parser.add_argument("--model", type=str, default="tinyplm",
-                        choices=["tinyplm", "fp16-baseline", "esm2", "compare"],
+    parser = argparse.ArgumentParser(description="Benchmark Wren models")
+    parser.add_argument("--model", type=str, default="wren",
+                        choices=["wren", "fp16-baseline", "esm2", "compare"],
                         help="Model to benchmark")
     parser.add_argument("--checkpoint", type=Path, default=None,
                         help="Path to model checkpoint")

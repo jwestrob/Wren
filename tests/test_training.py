@@ -1,11 +1,11 @@
-"""Tests for TinyPLM training components."""
+"""Tests for Wren training components."""
 
 import pytest
 import torch
 from torch.optim import AdamW
 
-from tinyplm.training.losses import MLMLoss, InfoNCELoss, MRLLoss, CombinedLoss
-from tinyplm.training.scheduler import (
+from wren.training.losses import MLMLoss, InfoNCELoss, MRLLoss, CombinedLoss
+from wren.training.scheduler import (
     get_cosine_schedule_with_warmup,
     get_wsd_schedule,
     get_linear_decay_schedule,

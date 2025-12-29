@@ -1,4 +1,4 @@
-"""Transformer Block for TinyPLM.
+"""Transformer Block for Wren.
 
 Pre-norm architecture combining:
 - Multi-head attention (or Differential attention) with YaRN
@@ -13,9 +13,9 @@ import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
-from tinyplm.model.attention import AttentionOutput, DifferentialAttention, MultiHeadAttention
-from tinyplm.model.ffn import SwiGLUFFN
-from tinyplm.model.norm import RMSNorm
+from wren.model.attention import AttentionOutput, DifferentialAttention, MultiHeadAttention
+from wren.model.ffn import SwiGLUFFN
+from wren.model.norm import RMSNorm
 
 
 @dataclass

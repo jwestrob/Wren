@@ -45,7 +45,7 @@ training:
   eval_every_steps: 500  # More frequent eval
   checkpoint_dir: checkpoints/quick_test
   log_every_steps: 10
-  wandb_project: tinyplm
+  wandb_project: wren
   device: mps
   mixed_precision: false
   seed: 42

@@ -1,4 +1,4 @@
-"""Normalization layers for TinyPLM."""
+"""Normalization layers for Wren."""
 
 import torch
 import torch.nn as nn

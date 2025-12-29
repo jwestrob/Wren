@@ -1,4 +1,4 @@
-"""Trainer class for TinyPLM.
+"""Trainer class for Wren.
 
 Implements:
 - Training loop with gradient accumulation
@@ -21,10 +21,10 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from tinyplm.config import TrainingConfig
-from tinyplm.model.plm import TinyPLM
-from tinyplm.training.losses import CombinedLoss
-from tinyplm.training.scheduler import get_scheduler
+from wren.config import TrainingConfig
+from wren.model.plm import Wren
+from wren.training.losses import CombinedLoss
+from wren.training.scheduler import get_scheduler
 
 
 @dataclass
@@ -38,11 +38,11 @@ class TrainState:
 
 
 class Trainer:
-    """Trainer for TinyPLM."""
+    """Trainer for Wren."""
 
     def __init__(
         self,
-        model: TinyPLM,
+        model: Wren,
         config: TrainingConfig,
         train_dataloader: DataLoader,
         val_dataloader: Optional[DataLoader] = None,
@@ -51,7 +51,7 @@ class Trainer:
         """Initialize trainer.
 
         Args:
-            model: TinyPLM model to train.
+            model: Wren model to train.
             config: Training configuration.
             train_dataloader: Training data loader.
             val_dataloader: Optional validation data loader.

@@ -1,4 +1,4 @@
-"""Configuration dataclasses for TinyPLM."""
+"""Configuration dataclasses for Wren."""
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -71,7 +71,7 @@ class TrainingConfig:
 
     # Logging
     log_every_steps: int = 100
-    wandb_project: str = "tinyplm"
+    wandb_project: str = "wren"
     wandb_run_name: Optional[str] = None
 
     # Device

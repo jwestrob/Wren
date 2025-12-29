@@ -1,17 +1,17 @@
-"""Tests for TinyPLM model components."""
+"""Tests for Wren model components."""
 
 import pytest
 import torch
 
-from tinyplm.config import ModelConfig
-from tinyplm.model.bitlinear import BitLinear
-from tinyplm.model.rope import RotaryEmbedding, YaRNRotaryEmbedding, apply_rope, apply_rope_with_scale
-from tinyplm.model.norm import RMSNorm
-from tinyplm.model.ffn import SwiGLUFFN
-from tinyplm.model.attention import MultiHeadAttention
-from tinyplm.model.transformer import TransformerBlock
-from tinyplm.model.plm import TinyPLM
-from tinyplm.data.tokenizer import ProteinTokenizer
+from wren.config import ModelConfig
+from wren.model.bitlinear import BitLinear
+from wren.model.rope import RotaryEmbedding, YaRNRotaryEmbedding, apply_rope, apply_rope_with_scale
+from wren.model.norm import RMSNorm
+from wren.model.ffn import SwiGLUFFN
+from wren.model.attention import MultiHeadAttention
+from wren.model.transformer import TransformerBlock
+from wren.model.plm import Wren
+from wren.data.tokenizer import ProteinTokenizer
 
 
 class TestBitLinear:
@@ -248,8 +248,8 @@ class TestTransformerBlock:
         assert x.grad is not None
 
 
-class TestTinyPLM:
-    """Tests for full TinyPLM model."""
+class TestWren:
+    """Tests for full Wren model."""
 
     @pytest.fixture
     def small_config(self):
@@ -269,7 +269,7 @@ class TestTinyPLM:
 
     def test_forward_shape(self, small_config):
         """Test that all output shapes are correct."""
-        model = TinyPLM(small_config)
+        model = Wren(small_config)
         input_ids = torch.randint(0, 25, (2, 32))
 
         outputs = model(input_ids)
@@ -280,7 +280,7 @@ class TestTinyPLM:
 
     def test_with_attention_mask(self, small_config):
         """Test forward with attention mask."""
-        model = TinyPLM(small_config)
+        model = Wren(small_config)
         input_ids = torch.randint(0, 25, (2, 32))
         attention_mask = torch.ones(2, 32)
         attention_mask[:, 16:] = 0
@@ -290,7 +290,7 @@ class TestTinyPLM:
 
     def test_get_embeddings_mrl(self, small_config):
         """Test MRL truncation of embeddings."""
-        model = TinyPLM(small_config)
+        model = Wren(small_config)
         model.eval()
         input_ids = torch.randint(0, 25, (2, 32))
 
@@ -309,7 +309,7 @@ class TestTinyPLM:
 
     def test_mlm_loss(self, small_config):
         """Test MLM loss computation."""
-        model = TinyPLM(small_config)
+        model = Wren(small_config)
         input_ids = torch.randint(0, 25, (2, 32))
         labels = input_ids.clone()
         labels[:, ::2] = -100  # Ignore even positions
@@ -322,7 +322,7 @@ class TestTinyPLM:
 
     def test_parameter_count(self, small_config):
         """Test parameter counting."""
-        model = TinyPLM(small_config)
+        model = Wren(small_config)
         total = model.num_parameters
         trainable = model.num_trainable_parameters
 

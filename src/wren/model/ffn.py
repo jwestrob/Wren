@@ -1,4 +1,4 @@
-"""SwiGLU Feed-Forward Network for TinyPLM.
+"""SwiGLU Feed-Forward Network for Wren.
 
 Implements gated linear unit with SiLU (Swish) activation.
 Uses BitLinear for weight-quantized layers.
@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from tinyplm.model.bitlinear import get_linear_layer
+from wren.model.bitlinear import get_linear_layer
 
 
 class SwiGLUFFN(nn.Module):

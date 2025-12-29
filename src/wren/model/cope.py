@@ -1,4 +1,4 @@
-"""Contextual Position Encoding (CoPE) for TinyPLM.
+"""Contextual Position Encoding (CoPE) for Wren.
 
 CoPE computes positions based on content rather than absolute indices.
 Each token learns a "gate" that determines how much it counts toward position.

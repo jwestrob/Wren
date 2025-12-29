@@ -1,4 +1,4 @@
-"""Protein Language Model (TinyPLM).
+"""Protein Language Model (Wren).
 
 Full model combining:
 - Token embeddings (FP16, not quantized)
@@ -13,13 +13,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from tinyplm.config import ModelConfig
-from tinyplm.model.norm import RMSNorm
-from tinyplm.model.transformer import TransformerBlock
+from wren.config import ModelConfig
+from wren.model.norm import RMSNorm
+from wren.model.transformer import TransformerBlock
 
 
-class TinyPLM(nn.Module):
-    """TinyPLM: BitNet-MRL Protein Language Model.
+class Wren(nn.Module):
+    """Wren: BitNet-MRL Protein Language Model.
 
     Architecture:
         - FP16 token embeddings (not quantized for semantic discrimination)
@@ -33,7 +33,7 @@ class TinyPLM(nn.Module):
     """
 
     def __init__(self, config: ModelConfig):
-        """Initialize TinyPLM.
+        """Initialize Wren.
 
         Args:
             config: Model configuration.
@@ -94,7 +94,7 @@ class TinyPLM(nn.Module):
         position_ids: Optional[torch.Tensor] = None,
         output_hidden_states: bool = False,
     ) -> dict[str, torch.Tensor]:
-        """Forward pass through TinyPLM.
+        """Forward pass through Wren.
 
         Args:
             input_ids: Token IDs of shape [batch, seq_len].

@@ -1,4 +1,4 @@
-"""Loss functions for TinyPLM training.
+"""Loss functions for Wren training.
 
 Implements:
 - MLM cross-entropy loss
