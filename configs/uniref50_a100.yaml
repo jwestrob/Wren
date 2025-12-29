@@ -1,0 +1,64 @@
+# UniRef50 training config - A100 optimized
+#
+# For training on cloud A100 GPUs (40GB or 80GB)
+# Expects UniRef50 data at data/uniref50/train.fasta
+#
+# Single A100-80GB:
+#   python scripts/train.py --config configs/uniref50_a100.yaml \
+#     --train-data data/uniref50/train.fasta \
+#     --val-data data/uniref50/val.fasta
+#
+# Multi-GPU (torchrun):
+#   torchrun --nproc_per_node=4 scripts/train.py --config configs/uniref50_a100.yaml \
+#     --train-data data/uniref50/train.fasta \
+#     --val-data data/uniref50/val.fasta
+
+model:
+  hidden_dim: 512
+  num_layers: 8
+  num_heads: 8
+  head_dim: 64
+  ffn_dim: 1365
+  vocab_size: 25
+  max_seq_len: 2048
+  mrl_dims: [64, 128, 256, 512]
+  embedding_dim: 512
+  dropout: 0.0
+  use_bitlinear: true
+  use_yarn: true
+  rope_scale: 1.0
+  gradient_checkpointing: false  # A100 has enough memory
+
+training:
+  learning_rate: 1.0e-3
+  weight_decay: 0.01
+  beta1: 0.9
+  beta2: 0.95
+  eps: 1.0e-8
+  max_grad_norm: 1.0
+  warmup_steps: 2000
+  total_steps: 100000  # More steps for larger dataset
+  lr_schedule: cosine
+  batch_size: 64  # A100 can handle this
+  gradient_accumulation_steps: 4  # Effective batch = 256
+  save_every_steps: 10000
+  eval_every_steps: 2000
+  checkpoint_dir: checkpoints/uniref50_bitnet
+  log_every_steps: 50
+  wandb_project: tinyplm
+  device: cuda
+  mixed_precision: true  # A100 has good AMP support
+  seed: 42
+
+data:
+  dataset_path: data/uniref50
+  max_length: 2048
+  min_length: 50
+  mask_prob: 0.15
+  mask_token_prob: 0.8
+  random_token_prob: 0.1
+  crop_min_ratio: 0.7
+  crop_max_ratio: 0.9
+  extra_mask_prob: 0.2
+  num_workers: 16  # More CPU cores on cloud
+  prefetch_factor: 4

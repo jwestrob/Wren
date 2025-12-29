@@ -36,10 +36,12 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
     "mypy>=1.7.0",
+    "matplotlib>=3.7.0",
 ]
 eval = [
     "scikit-learn>=1.3.0",
     "tape-proteins>=0.5",
+    "fair-esm>=2.0.0",
 ]
 
 [project.scripts]

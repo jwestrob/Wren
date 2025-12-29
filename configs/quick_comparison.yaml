@@ -1,0 +1,64 @@
+# Quick comparison config - 5K steps only
+#
+# Use this for rapid A/B testing between BitNet and FP16.
+# 5K steps is enough to see the initial learning curve and whether
+# the model continues improving past step 2K.
+#
+# Run BitNet:
+#   python scripts/train.py --config configs/quick_comparison.yaml \
+#     --train-data data/swissprot/train.fasta \
+#     --val-data data/swissprot/val.fasta \
+#     --no-wandb
+#
+# Run FP16 (edit use_bitlinear to false, checkpoint_dir):
+#   Same command after edits
+
+model:
+  hidden_dim: 512
+  num_layers: 8
+  num_heads: 8
+  head_dim: 64
+  ffn_dim: 1365
+  vocab_size: 25
+  max_seq_len: 2048
+  mrl_dims: [64, 128, 256, 512]
+  embedding_dim: 512
+  dropout: 0.0
+  use_bitlinear: true  # Toggle this for comparison
+  use_yarn: true
+  rope_scale: 1.0
+  gradient_checkpointing: true
+
+training:
+  learning_rate: 1.0e-3
+  weight_decay: 0.01
+  beta1: 0.9
+  beta2: 0.95
+  eps: 1.0e-8
+  max_grad_norm: 1.0
+  warmup_steps: 500  # Shorter warmup for quick test
+  total_steps: 5000  # Just 5K steps
+  lr_schedule: cosine
+  batch_size: 8
+  gradient_accumulation_steps: 16
+  save_every_steps: 1000
+  eval_every_steps: 500  # More frequent eval
+  checkpoint_dir: checkpoints/quick_test
+  log_every_steps: 10
+  wandb_project: tinyplm
+  device: mps
+  mixed_precision: false
+  seed: 42
+
+data:
+  dataset_path: data/swissprot
+  max_length: 2048
+  min_length: 50
+  mask_prob: 0.15
+  mask_token_prob: 0.8
+  random_token_prob: 0.1
+  crop_min_ratio: 0.7
+  crop_max_ratio: 0.9
+  extra_mask_prob: 0.2
+  num_workers: 8
+  prefetch_factor: 4

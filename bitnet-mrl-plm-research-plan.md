@@ -504,12 +504,138 @@ The ternary case is actually simpler than int4/int8 since multiply by {-1, 0, +1
 
 ---
 
+## Future Research Directions (Exploratory)
+
+These are interesting ideas that came up during development. They're speculative and would require careful validation before integrating into the main architecture.
+
+### 1. CoPE (Contextual Position Encoding) — Priority: High
+
+**What:** Replace or augment RoPE/YaRN with CoPE, which computes positions based on content rather than absolute indices.
+
+**Why it might help proteins:**
+- **Domain-relative positioning**: Conserved domains should behave similarly regardless of absolute position. CoPE could learn to "anchor" on conserved motifs (e.g., catalytic triads, binding sites).
+- **Indel tolerance**: Proteins evolve with insertions/deletions. Contextual positions would be more robust than absolute RoPE to evolutionary variation.
+- **Secondary structure periodicity**: Alpha helices (3.6 residues/turn) and beta sheets have local periodicity that content-aware positioning might capture better.
+- **Multi-domain proteins**: Position within a domain may matter more than position within the full sequence.
+
+**How it works:**
+```python
+# Each token learns a "gate" - how much it counts toward position
+# Positions are cumulative sums of gates, making them content-dependent
+gate = sigmoid(linear(hidden_states))  # [batch, seq_len, 1]
+positions = cumsum(gate, dim=1)  # Contextual positions
+```
+
+**Tradeoffs:**
+- More complex than RoPE (requires learning the gates)
+- Unclear how to combine with NTK-scaling for context extension
+- Less interpretable positions
+
+**Status:** Worth exploring after Phase 1 training validates core architecture. Could be an ablation study.
+
+**Reference:** "CoPE: Contextual Position Encoding" (2024)
+
+---
+
+### 2. Muon Optimizer — Priority: Low
+
+**What:** Muon (Momentum Orthogonalized Update) orthogonalizes momentum before applying updates. Hybrid approach uses Muon for hidden layers, AdamW for embeddings/output.
+
+**Why it might help:**
+- Claims better convergence on transformer hidden layers
+- Orthogonalization might improve gradient flow
+
+**Why we're skeptical for this project:**
+- Muon is designed for continuous weights
+- BitNet's ternary quantization + STE gradients might conflict with orthogonalization (the weight space is discrete, orthogonalization assumes continuous)
+- Very new, less battle-tested than AdamW
+
+**Status:** Would need careful small-scale testing (1M params, 1K steps) to see if Muon + BitNet is even stable before considering.
+
+**Reference:** "Muon: An optimizer for Hidden Layers in Transformers" (2024)
+
+---
+
+### 3. TTT (Test-Time Training) on Input Layer — Priority: Speculative
+
+**What:** Use test-time training on the embedding layer, combined with MRL, to create a "dynamic tokenizer" that adapts to input characteristics.
+
+**The idea:**
+- Embedding layer adapts at inference time to the specific protein/family
+- MRL truncation dimension could be selected based on sequence characteristics
+- Different representation for different protein families without explicit conditioning
+
+**Why it's interesting:**
+- Proteins from different families have very different compositional biases
+- A single fixed embedding might not be optimal for all families
+- Could enable adaptive precision: simple proteins get 64d, complex proteins get 512d
+
+**Why we're skeptical:**
+- TTT adds significant inference cost (gradient steps at test time)
+- Unclear theoretical motivation for why this specifically helps proteins
+- Two learned decisions (embedding adaptation + MRL truncation) might be hard to train jointly
+- Very experimental, even for NLP
+
+**Status:** Interesting research direction but needs clearer hypothesis. Would want to see TTT validated for simpler protein tasks first.
+
+**Reference:** "TTT: Test-Time Training of Transformers" (2024)
+
+---
+
+### 4. Structure-Aware Contrastive Pretraining — Priority: Medium
+
+**What:** During pretraining, use structural similarity (from predicted structures or PDB) as supervision signal for the contrastive MRL loss.
+
+**Current approach:** Random crops of same sequence are positive pairs.
+
+**Alternative:** Proteins with similar structures (same SCOP fold) are positive pairs.
+
+**Why it might help:**
+- Embeddings would capture structural similarity, not just sequence similarity
+- Better for remote homology detection (proteins with <30% identity but similar structure)
+- Aligns with ultimate use case (finding structurally similar proteins)
+
+**Why we didn't do it in Phase 1:**
+- Requires structure predictions for all training sequences (compute-intensive)
+- Introduces dependency on external model (ESMFold/AlphaFold)
+- Sequence-based contrastive is simpler and has precedent
+
+**Status:** Good candidate for Phase 4 or beyond, once core architecture is validated.
+
+---
+
+### 5. Progressive MRL Dimension Training — Priority: Medium
+
+**What:** Instead of training all MRL dimensions equally, progressively add dimensions during training.
+
+**Curriculum:**
+1. Steps 0-10K: Only train 64d
+2. Steps 10K-20K: Train 64d + 128d
+3. Steps 20K-30K: Train 64d + 128d + 256d
+4. Steps 30K+: Train all dimensions
+
+**Why it might help:**
+- Forces lower dimensions to be more useful early
+- Prevents high dimensions from "carrying" lower dimensions
+- Similar to progressive growing in GANs
+
+**Why we didn't do it:**
+- Adds training complexity
+- Unclear if it actually helps (no strong evidence either way)
+- Standard MRL (all dims equal) has good published results
+
+**Status:** Easy ablation to try if baseline MRL underperforms at low dimensions.
+
+---
+
 ## Changelog
 
 | Date | Changes |
 |------|---------|
 | 2024-12-28 | Initial plan created |
 | 2025-12-28 | Added note: custom Triton kernels needed for real efficiency (fake quant OK for training) |
+| 2025-12-29 | Added Future Research Directions section (CoPE, Muon, TTT, structure-aware contrastive, progressive MRL) |
+| 2025-12-29 | Created experimental CoPE implementation sketch in `model/cope.py` |
 
 ---
 

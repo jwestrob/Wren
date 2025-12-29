@@ -56,3 +56,6 @@ checkpoints/
 wandb/
 logs/
 *.log
+
+# Generated images (can regenerate from data)
+training_loss_curve.png

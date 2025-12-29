@@ -1,0 +1,59 @@
+# UniRef50 training config - Single B200 optimized
+#
+# For training on NVIDIA B200 (180GB VRAM)
+# Maximizes single-GPU throughput with large batch size
+#
+# Usage:
+#   python scripts/train.py --config configs/uniref50_b200.yaml \
+#     --train-data data/uniref50/train.fasta \
+#     --val-data data/uniref50/val.fasta
+
+model:
+  hidden_dim: 512
+  num_layers: 8
+  num_heads: 8
+  head_dim: 64
+  ffn_dim: 1365
+  vocab_size: 25
+  max_seq_len: 2048
+  mrl_dims: [64, 128, 256, 512]
+  embedding_dim: 512
+  dropout: 0.0
+  use_bitlinear: true
+  use_yarn: true
+  rope_scale: 1.0
+  gradient_checkpointing: false  # B200 has plenty of VRAM
+
+training:
+  learning_rate: 1.0e-3
+  weight_decay: 0.01
+  beta1: 0.9
+  beta2: 0.95
+  eps: 1.0e-8
+  max_grad_norm: 1.0
+  warmup_steps: 2000
+  total_steps: 100000
+  lr_schedule: cosine
+  batch_size: 256  # B200 can handle large batches
+  gradient_accumulation_steps: 1  # No need to accumulate
+  save_every_steps: 10000
+  eval_every_steps: 2000
+  checkpoint_dir: checkpoints/uniref50_b200
+  log_every_steps: 50
+  wandb_project: tinyplm
+  device: cuda
+  mixed_precision: true  # Use AMP for speed
+  seed: 42
+
+data:
+  dataset_path: data/uniref50
+  max_length: 2048
+  min_length: 50
+  mask_prob: 0.15
+  mask_token_prob: 0.8
+  random_token_prob: 0.1
+  crop_min_ratio: 0.7
+  crop_max_ratio: 0.9
+  extra_mask_prob: 0.2
+  num_workers: 32  # B200 nodes have lots of CPU cores
+  prefetch_factor: 4
