@@ -1,0 +1,50 @@
+# TinyPLM 50M parameter configuration
+# BitNet-MRL Protein Language Model
+
+model:
+  hidden_dim: 1024        # 2x standard to compensate for ternary
+  num_layers: 12
+  num_heads: 16
+  head_dim: 64
+  ffn_dim: 2730           # ~8/3 * hidden_dim for SwiGLU
+  vocab_size: 25          # 20 AA + 5 special tokens
+  max_seq_len: 2048
+  mrl_dims: [64, 128, 256, 512]
+  embedding_dim: 512
+  dropout: 0.0
+  use_bitlinear: true
+  gradient_checkpointing: true
+
+training:
+  learning_rate: 1.0e-3   # BitNet uses higher LR
+  weight_decay: 0.01
+  beta1: 0.9
+  beta2: 0.95
+  eps: 1.0e-8
+  max_grad_norm: 1.0
+  warmup_steps: 2000
+  total_steps: 100000
+  lr_schedule: cosine
+  batch_size: 32
+  gradient_accumulation_steps: 8
+  save_every_steps: 5000
+  eval_every_steps: 500
+  checkpoint_dir: checkpoints
+  log_every_steps: 100
+  wandb_project: tinyplm
+  device: cuda
+  mixed_precision: true
+  seed: 42
+
+data:
+  dataset_path: data/uniref50
+  max_length: 2048
+  min_length: 50
+  mask_prob: 0.15
+  mask_token_prob: 0.8
+  random_token_prob: 0.1
+  crop_min_ratio: 0.7
+  crop_max_ratio: 0.9
+  extra_mask_prob: 0.2
+  num_workers: 4
+  prefetch_factor: 2

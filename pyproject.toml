@@ -1,0 +1,73 @@
+[project]
+name = "tinyplm"
+version = "0.1.0"
+description = "BitNet-MRL Protein Language Model - efficient ternary quantized pLM with Matryoshka embeddings"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Jacob", email = "jacob@example.com" }
+]
+keywords = ["protein", "language-model", "bitnet", "quantization", "matryoshka", "embeddings"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "einops>=0.7.0",
+    "wandb>=0.16.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66.0",
+    "numpy>=1.24.0",
+    "biopython>=1.81",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+eval = [
+    "scikit-learn>=1.3.0",
+    "tape-proteins>=0.5",
+]
+
+[project.scripts]
+tinyplm-train = "tinyplm.scripts.train:main"
+tinyplm-eval = "tinyplm.scripts.evaluate:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tinyplm"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v --tb=short"
